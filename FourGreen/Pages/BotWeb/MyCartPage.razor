@@ -1,0 +1,409 @@
+﻿@page "/cart/{userId}"
+@using FourGreen.DataUser;
+@using FourGreen.Modals;
+@inject NavigationManager NavigationManager
+@layout BotLayout
+@inject CartService cartService
+@inject SparePartsRepository SparePartsRepository
+
+
+@if (myCart.CartProducts.Count > 0)
+{
+
+    <div class="page">
+        <div class="iconlogo">
+            <i @onclick="(() => Cancle(UserId))" class="fa-solid fa-arrow-left"></i>
+            <img class="log" src="./images/svg/Logo.svg" />
+        </div>
+        <div class="cards">
+            @foreach (var item in myCart.CartProducts)
+            {
+                <div class="test-item">
+                    <div class="test-img">
+                        <img src="@item.ImgUrl" />
+                    </div>
+                    <div class="test-text">
+                        <div class="brand-qty">
+                            <p class="brand">@item.BrandName</p>
+                            <p class="qty">Сотувда: @products.FirstOrDefault(f => f.Id == item.Id).Quantity ta</p>
+                        </div>
+                        <div class="type-info">
+                            <p class="type">@item.Type:</p>
+                            <p class="info">@item.Name</p>
+                        </div>
+                        <div class="price-btn">
+                            @if (products.FirstOrDefault(f => f.Id == item.Id) != null)
+                            {
+                                <p class="price">@item.totalSum.ToString("#,##0.00 $")</p>
+                                <div class="plus-minus">
+                                    <span class="minus" @onclick="e=>TaskHandleCart(products.FirstOrDefault(f => f.Id == item.Id),-1)">
+                                        <i class="fa-solid fa-minus"></i>
+                                    </span>
+                                    <span class="qty">@myCart.CartProducts.FirstOrDefault(f => f.Id == item.Id)!.Qty</span>
+                                    <span class="plus" @onclick="e=>TaskHandleCart(products.FirstOrDefault(f => f.Id == item.Id),1)">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+        <div class=" total">
+
+            <div class="total-text">
+                <p style="margin-bottom: 5px;" class="all">Ҳаммаси</p>
+                <p class="total-price">@myCart.CartProducts.Sum(s => s.totalSum).ToString("#,##0.00 $")</p>
+            </div>
+            <button @onclick="(() => Delivery(UserId))" class="total-button">Расмийлаштириш</button>
+        </div>
+    </div>
+}
+else
+{
+
+    <div class="empty-page">
+        <img class="empty" src="./images/png/empty.png" />
+        <h2 class="empty-h2">Саватда ҳозирча махсулотлар <br /> йўқ</h2>
+        <p>Бош саҳифага қайтиб ўз махсулотларингизни расмийлаштиринг</p>
+        <button @onclick="e=> Cancle(UserId)">Бош саҳифага қайтиш</button>
+    </div>
+}
+
+
+
+
+@code {
+    [Parameter]
+    public string userId { get; set; }
+    public int UserId => int.TryParse(userId, out int uId) ? uId : 0;
+    public MyCart myCart = new();
+    public CartProduct? cartProduct;
+    public List<SparePartsInfoModel> products = new();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            myCart = new();
+            myCart = await cartService.GetMyCartItems(UserId);
+            var productIds = myCart.CartProducts.Select(s => s.Id).ToList();
+            products = SparePartsRepository.GetProductsByIds(productIds);
+            StateHasChanged();
+        }
+    }
+
+    private void Cancle(int id)
+    {
+        NavigationManager.NavigateTo($"/order/{id}");
+        StateHasChanged();
+    }
+
+    private void Delivery(int userid)
+    {
+        NavigationManager.NavigateTo($"/delivery/{userid}");
+        StateHasChanged();
+    }
+    async Task TaskHandleCart(SparePartsInfoModel? modal, int qty)
+    {
+        try
+        {
+            if (modal == null)
+                return;
+            CartProduct product = new(modal.Id, modal.Name, modal.BrandName, modal.TypeName, modal.ImageUrl, 1, modal.Price);
+            var viewProduct = products.FirstOrDefault(f => f.Id == modal.Id);
+            if (qty > 0)
+            {
+                if (viewProduct?.Quantity < 1)
+                    return;
+                myCart = await cartService.PlusCart(product, UserId);
+                viewProduct!.Quantity--;
+            }
+            else
+            {
+                if (viewProduct?.Quantity == 0)
+                    return;
+                myCart = await cartService.MinusToCart(product, UserId);
+                viewProduct!.Quantity++;
+            }
+            if (viewProduct != null)
+                SparePartsRepository.UpdateQty(viewProduct);
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+
+        }
+    }
+
+    string GetPrise(double price, int qty) => (price * qty).ToString("#,##0.00 $");
+
+
+
+}
+
+
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .empty-page {
+        width: 100%;
+        height: 100%;
+    }
+
+    .page {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .iconlogo {
+        width: 100vw;
+        height: 100px;
+        display: flex;
+        margin-bottom: 0px;
+        flex-direction: row;
+        padding: 10px;
+        position: sticky;
+        top: 0;
+        background: white;
+    }
+
+        .iconlogo i {
+            font-size: 28px;
+            margin-top: 25px;
+            margin-left: 5px
+        }
+
+        .iconlogo .log {
+            margin-left: 30px;
+        }
+
+    .cards {
+        padding: 10px;
+        width: 100vw;
+        height: auto;
+        padding-bottom: 80px;
+    }
+
+        .cards .test-item {
+            width: 100%;
+            height: 145px;
+            padding: 5px;
+            background-color: #b1a9a9de;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: row;
+            gap: 5px;
+            justify-content: space-between;
+        }
+
+            .cards .test-item .test-img {
+                width: 150px;
+                height: 100%;
+                border-radius: inherit;
+                background-color: white;
+            }
+
+                .cards .test-item .test-img img {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: inherit;
+                }
+
+            .cards .test-item .test-text {
+                width: 70%;
+                height: auto;
+            }
+
+                .cards .test-item .test-text .brand-qty {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                    .cards .test-item .test-text .brand-qty .brand {
+                        margin: 0;
+                        font-style: oblique;
+                        font-size: 18px;
+                        font-weight: 800;
+                    }
+
+                    .cards .test-item .test-text .brand-qty .qty {
+                        margin: 0;
+                        color: #207532;
+                        font-size: 14px;
+                        font-weight: 800;
+                    }
+
+                .cards .test-item .test-text .type-info {
+                    width: 100%;
+                    height: 60px;
+                    margin-bottom: 5px;
+                    
+                    border-radius: 5px;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                    .cards .test-item .test-text .type-info .type {
+                        margin: 0;
+                        font-size: medium;
+                        font-weight: 600;
+                    }
+
+                    .cards .test-item .test-text .type-info .info {
+                        margin: 0;
+                        line-height: 8px;
+                    }
+
+                .cards .test-item .test-text .price-btn {
+                    width: 100%;
+                    height: 41px;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between
+                }
+
+                    .cards .test-item .test-text .price-btn .price {
+                        margin: 0;
+                    }
+
+                .cards .test-item .test-text .plus-minus {
+                    width: 130px;
+                    background-color: white;
+                    height: 35px;
+                    display: flex;
+                    border-radius: 20px;
+                    flex-direction: row;
+                    justify-content: space-between;
+                }
+
+                    .cards .test-item .test-text .plus-minus span {
+                        align-content: center;
+                    }
+
+                    .cards .test-item .test-text .plus-minus .plus {
+                        width: 35px;
+                        height: 100%;
+                        background: greenyellow;
+                        border-radius: 0px 10px 10px 0;
+                    }
+
+                    .cards .test-item .test-text .plus-minus .qty {
+                        font-size: 16px;
+                        color: black;
+                        font-weight: bold;
+                    }
+
+                    .cards .test-item .test-text .plus-minus i {
+                        font-size: 20px;
+                        margin-left: 10px;
+                        color: white;
+                        margin-top: 5px;
+                    }
+
+                    .cards .test-item .test-text .plus-minus .minus {
+                        width: 35px;
+                        height: 100%;
+                        background: red;
+                        border-radius: 10px 0px 0px 10px;
+                    }
+
+    .total {
+        width: 100%;
+        height: 80px;
+        background-color: #E8E8E8;
+        position: fixed;
+        border-radius: 20px 20px 0 0;
+        padding: 10px;
+        bottom: 0;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+        .total .total-text {
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            margin: 0;
+        }
+
+            .total .total-text .all {
+                font-family: Arial;
+                font-weight: 800;
+                font-size: 16px;
+                color: #777777;
+                margin-left: 20px;
+            }
+
+            .total .total-text .total-price {
+                font-family: Arial;
+                font-weight: bold;
+                font-size: 18px;
+                margin-left: 25px;
+            }
+
+        .total .total-button {
+            background: linear-gradient(180deg, rgba(196,196,196,1) 0%, rgba(93,93,93,1) 100%);
+            color: white;
+            width: 160px;
+            border-radius: 20px;
+            font-family: Arial;
+            font-weight: 600;
+        }
+
+    .empty-page {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .empty {
+        width: 250px;
+        height: 250px;
+        margin-left: 60px;
+        margin-top: 25px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .empty-h2 {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        margin-bottom: 15px;
+    }
+
+    .empty-page p {
+        text-align: center;
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        font-size: 16px;
+    }
+
+    .empty-page button {
+        align-self: center;
+        margin-top: 10px;
+        padding: 10px;
+        width: 300px;
+        height: 70px;
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(347deg, rgba(10,209,197,1) 0%, rgba(39,255,0,1) 100%);
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+</style>

@@ -1,0 +1,541 @@
+﻿@page "/delivery/{userId}"
+@using FourGreen.DataUser
+@using FourGreen.Modals
+@using FourGreen.Pages.Shared.Map
+@using Info.BotUsers
+@using Newtonsoft.Json
+@layout BotLayout
+@inject CartService cartService
+@inject NavigationManager NavigationManager
+@inject OrderRepository orderrepository
+@if (dane == true)
+{
+    <div class="donepage">
+        <div class="done">
+            <div class="success-checkmark">
+                <div class="check-icon">
+                    <span class="icon-line line-tip"></span>
+                    <span class="icon-line line-long"></span>
+                    <div class="icon-circle"></div>
+                    <div class="icon-fix"></div>
+                </div>
+            </div>
+            <h3 style="">Буюртмангиз қабул қилинди</h3>
+
+            <button class="done-button" @onclick="e=> Cancle(UserId)">Бош саҳифага қайтиш</button>
+        </div>
+    </div>
+
+}
+else
+{
+    <div class="page">
+        <div class="iconlogo">
+            <i @onclick="(() => Back(UserId))" class="fa-solid fa-arrow-left"></i>
+            <img class="log" src="./images/svg/Logo.svg" />
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; padding-bottom:80px;">
+            <div class="buttons">
+                <button class="@($"{(deliveryType==OrderType.Takeout ? "active-btn" : "btn")}")" @onclick="e=>ChangeTab(OrderType.Takeout)">Олиб кетиш <br /> (Do'kondan)</button>
+                <button class="@($"{(deliveryType==OrderType.Delivery ? "active-btn" : "btn")}")" @onclick="e=>ChangeTab(OrderType.Delivery)">Yetkazib berish <br />(Toshkent ichida)</button>
+                <button class="@($"{(deliveryType==OrderType.RegionDelivery ? "active-btn" : "btn")}")" @onclick="e=>ChangeTab(OrderType.RegionDelivery )">Yetkazib berish <br />(Viloyatga)</button>
+            </div>
+
+            @if (deliveryType == OrderType.Takeout)
+            {
+                <div class="take-card">
+                    <OrderMap Lat="@(41.234368)" Long="@(69.209663)" IsDelivery="false" />
+                    <p> <b>Do'kon:</b> VARIOUS MULTIBRAND AUTOPARTS</p>
+                    <p style="font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;font-size:14px; color:#585858">
+                        Toshkent shaxar, Sergili tumani Moshina bozor <br />
+                        3/3/3 do’koni
+                    </p>
+                    <div class="phone">
+                        <img src="./images/svg/tel.svg" style="width: 30px; height: 30px;" />
+                        <p><b>Tel: </b><a>+998(90)053-25-39</a></p>
+                    </div>
+                </div>
+
+            }
+            else if (deliveryType == OrderType.Delivery)
+            {
+                <EditForm Model="orderReq">
+                    <div class="take-card">
+                        <OrderMap Lat="@(41.311104)" Long="@(69.241494)" IsDelivery="true" SendCoords="GetCoords" />
+                        <InputText @bind-Value="orderReq.StoreN" class="store" type="text" placeholder="Do'kon nomi/raqami" />
+                    </div>
+                </EditForm>
+            }
+            else
+            {
+
+                <EditForm Model="orderReq">
+                    <div class="take-input">
+                        <input class="deln" @bind-value="orderReq.DelName" placeholder="Shaforning ismi" />
+                        <MyInputMask Prefix="+998" data-mask="(00) 000-00-00" Label="Shaforning telefon nomeri" @bind-Value="@orderReq.Phone"></MyInputMask>
+                    </div>
+                </EditForm>
+
+            }
+
+
+        </div>
+        <div class=" total">
+
+            <div class="total-text">
+                <p style="margin-bottom: 5px; font-family: Arial;" class="all">Ҳаммаси</p>
+                <p class="total-price" style="font-family: Arial;">@myCart.CartProducts.Sum(s => s.totalSum).ToString("#,##0.00 ⨎")</p>
+            </div>
+            <button @onclick="e=> Save(dane)" class="total-button" style="font-family: Arial;">Расмийлаштириш</button>
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public string userId { get; set; }
+    public int UserId => int.TryParse(userId, out int uId) ? uId : 0;
+    string phone;
+    bool done;
+    OrderType deliveryType = OrderType.Takeout;
+    OrderReq orderReq = new();
+    string GetPrise(double price, int qty) => (price * qty).ToString("#,##0.00 $");
+    public MyCart myCart = new();
+    public DataStore.SQL.Models.OrderModel reuqest = new();
+    public string? lat;
+    public string? longt;
+    public bool dane;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            myCart = new();
+            myCart = await cartService.GetMyCartItems(UserId);
+            StateHasChanged();
+        }
+    }
+
+    void GetCoords((string lat, string longt) data)
+    {
+        lat = data.lat;
+        longt = data.longt;
+    }
+
+    void ChangeTab(OrderType _deliveryType)
+    {
+        deliveryType = _deliveryType;
+
+        StateHasChanged();
+    }
+
+    private void Cancle(int userid)
+    {
+        NavigationManager.NavigateTo($"/order/{userid}");
+        StateHasChanged();
+    }
+    private async void Save(bool done)
+    {
+
+        var products = JsonConvert.SerializeObject(myCart.CartProducts.Select(s => new Products()
+            {
+                price = s.price,
+                productBrand = s.BrandName,
+                productId = s.Id,
+                productName = s.Name,
+                productTaype = s.Type,
+                qty = s.Qty,
+            }).ToList());
+        reuqest.Order = new()
+            {
+                CreateDate = DateTime.Now,
+                DriverName = orderReq.DelName,
+                DriverNumber = orderReq.Phone,
+                StoreNo = orderReq.StoreN,
+                Lat = lat,
+                Long = longt,
+                Products = products,
+                Type = deliveryType
+            };
+        reuqest.Order.UserId = UserId;
+        await cartService.Delete(UserId);
+        orderrepository.Save(reuqest);
+        dane = true;
+        StateHasChanged();
+    }
+
+    private void Back(int id)
+    {
+        NavigationManager.NavigateTo($"/cart/{UserId}");
+    }
+
+    public class OrderReq
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string StoreN { get; set; } = string.Empty;
+        public long Lat { get; set; }
+        public long Long { get; set; }
+        public string DelName { get; set; } = string.Empty;
+    }
+}
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    .donepage {
+        width: 100%;
+        height: 100%;
+        padding: 10px;
+    }
+
+    .done {
+        width: 100%;
+        height: 100%;
+        text-align:center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        
+    }
+
+    .page {
+        width: 100%;
+        height: auto;
+        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    }
+
+    .iconlogo {
+        width: auto;
+        height: auto;
+        display: flex;
+        margin-bottom: 0px;
+        flex-direction: row;
+        padding: 10px;
+        position: sticky;
+        top: 0;
+        background: white;
+    }
+
+        .iconlogo i {
+            font-size: 28px;
+            margin-top: 25px;
+            margin-left: 5px
+        }
+
+        .iconlogo .log {
+            margin-left: 30px;
+        }
+
+    .buttons {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        padding: 10px;
+        width: 100%;
+    }
+
+        .buttons .btn {
+            width: 100%;
+            height: 80px;
+            background-color: #D9D9D9;
+            border: none;
+            border-radius: 10px;
+            color: #585858;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+    .active-btn {
+        width: 100%;
+        background-color: #D9D9D9;
+        border: 2px solid skyblue;
+        border-radius: 10px;
+        color: #585858;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .take-card {
+        width: 97%;
+        margin-left: 7px;
+        height: auto;
+        background-color: #D9D9D9;
+        border-radius: 20px;
+        padding: 10px;
+    }
+
+        .take-card p {
+            margin: 3px;
+            font-size: 16px;
+        }
+
+        .take-card .phone {
+            display: flex;
+            text-align: center;
+            align-items: center;
+        }
+
+        .take-card .store {
+            width: 100%;
+            padding: 5px;
+            border: none;
+            border-radius: 10px;
+        }
+
+    .take-input {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+    }
+
+    .deln {
+        outline: none;
+        border-radius: 10px;
+        width: 100%;
+        background-color: white;
+        height: 40px;
+        padding-left: 13px;
+        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+        .deln::placeholder {
+            color: black;
+        }
+
+    .total {
+        width: 100%;
+        height: 80px;
+        background-color: #E8E8E8;
+        position: fixed;
+        border-radius: 20px 20px 0 0;
+        padding: 10px;
+        bottom: 0;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+        .total .total-text {
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            margin: 0;
+        }
+
+            .total .total-text .all {
+                font-family: Arial;
+                font-weight: 800;
+                font-size: 16px;
+                color: #777777;
+                margin-left: 20px;
+            }
+
+            .total .total-text .total-price {
+                font-family: Arial;
+                font-weight: bold;
+                font-size: 18px;
+                margin-left: 25px;
+            }
+
+        .total .total-button {
+            background: linear-gradient(180deg, rgba(196,196,196,1) 0%, rgba(93,93,93,1) 100%);
+            color: white;
+            width: 160px;
+            border-radius: 20px;
+            font-family: Arial;
+            font-weight: 600;
+        }
+
+
+
+
+    .success-checkmark {
+        width: 80px;
+        height: 115px;
+        margin: 0 auto;
+        .check-icon
+
+    {
+        width: 80px;
+        height: 80px;
+        position: relative;
+        border-radius: 50%;
+        box-sizing: content-box;
+        border: 4px solid #4CAF50;
+        &::before
+
+    {
+        top: 3px;
+        left: -2px;
+        width: 30px;
+        transform-origin: 100% 50%;
+        border-radius: 100px 0 0 100px;
+    }
+
+    &::after {
+        top: 0;
+        left: 30px;
+        width: 60px;
+        transform-origin: 0 50%;
+        border-radius: 0 100px 100px 0;
+        animation: rotate-circle 4.25s ease-in;
+    }
+
+    &::before, &::after {
+        content: '';
+        height: 100px;
+        position: absolute;
+        background: #FFFFFF;
+        transform: rotate(-45deg);
+    }
+
+    .icon-line {
+        height: 5px;
+        background-color: #4CAF50;
+        display: block;
+        border-radius: 2px;
+        position: absolute;
+        z-index: 10;
+        &.line-tip
+
+    {
+        top: 46px;
+        left: 14px;
+        width: 25px;
+        transform: rotate(45deg);
+        animation: icon-line-tip 0.75s;
+    }
+
+    &.line-long {
+        top: 38px;
+        right: 8px;
+        width: 47px;
+        transform: rotate(-45deg);
+        animation: icon-line-long 0.75s;
+    }
+
+    }
+
+    .icon-circle {
+        top: -4px;
+        left: -4px;
+        z-index: 10;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        position: absolute;
+        box-sizing: content-box;
+        border: 4px solid rgba(76, 175, 80, .5);
+    }
+
+    .icon-fix {
+        top: 8px;
+        width: 5px;
+        left: 26px;
+        z-index: 1;
+        height: 85px;
+        position: absolute;
+        transform: rotate(-45deg);
+        background-color: #FFFFFF;
+    }
+
+    }
+    }
+
+    @@keyframes rotate-circle {
+        0% {
+            transform: rotate(-45deg);
+        }
+
+        5% {
+            transform: rotate(-45deg);
+        }
+
+        12% {
+            transform: rotate(-405deg);
+        }
+
+        100% {
+            transform: rotate(-405deg);
+        }
+    }
+
+    @@keyframes icon-line-tip {
+        0% {
+            width: 0;
+            left: 1px;
+            top: 19px;
+        }
+
+        54% {
+            width: 0;
+            left: 1px;
+            top: 19px;
+        }
+
+        70% {
+            width: 50px;
+            left: -8px;
+            top: 37px;
+        }
+
+        84% {
+            width: 17px;
+            left: 21px;
+            top: 48px;
+        }
+
+        100% {
+            width: 25px;
+            left: 14px;
+            top: 45px;
+        }
+    }
+
+    @@keyframes icon-line-long {
+        0% {
+            width: 0;
+            right: 46px;
+            top: 54px;
+        }
+
+        65% {
+            width: 0;
+            right: 46px;
+            top: 54px;
+        }
+
+        84% {
+            width: 55px;
+            right: 0px;
+            top: 35px;
+        }
+
+        100% {
+            width: 47px;
+            right: 8px;
+            top: 38px;
+        }
+    }
+
+    .done-button {
+        margin-left:;
+        padding: 10px;
+        width: 300px;
+        height: 70px;
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(347deg, rgba(10,209,197,1) 0%, rgba(39,255,0,1) 100%);
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+    }
+</style>

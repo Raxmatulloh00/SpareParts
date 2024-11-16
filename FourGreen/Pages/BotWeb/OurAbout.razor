@@ -1,0 +1,178 @@
+﻿@page "/Bot"
+@layout BotLayout
+
+<div class="Ourabout">
+    <div class="logo">
+        <div class="img">
+            <img class="image" src="./images/svg/Logo.svg" />
+        </div>
+        <div class="text">
+            <h1>Биз ҳақимизда</h1>
+            <p><b><i>Various_autoparts</i></b> бу йерда сиз ўзингизга керакли бўлган ҳилма хил ехтиёт қисимларни топишингиз мумкин</p>
+        </div>
+    </div>
+    <div class="worker">
+        <h3 class="order">Заказлар учун мурожат</h3>
+        <div class="menegers">
+            <h5>1. Дукон менежери</h5>
+            <p><b>Исм:</b> Анвар</p>
+            <p><b>Телефон:</b> +998973337475</p>
+            <p><b>Телеграам:</b> <a href="https://t.me/AnvarChemist">Анвар</a></p>
+        </div>
+        <div class="menegers">
+            <h5>2. Таминотчи</h5>
+            <p><b>Исм:</b> Жамшид</p>
+            <p><b>Телефон:</b> +998909255608</p>
+            <p><b>Телеграам:</b> <a href="https://t.me/Jamshid_fourgreen">Жамшид</a></p>
+        </div>
+        <div class="menegers">
+            <h5>3.Савдо булими</h5>
+            <p><b>Исм:</b> Fazliddin</p>
+            <p><b>Телефон:</b> +998935535963x</p>
+            <p><b>Телеграам:</b> <a href="https://t.me/Fazliddin1993">Fazliddin</a></p>
+        </div>
+        <div class="menegers">
+            <h5>4.Савдо ассистенти</h5>
+            <p><b>Исм:</b> Сирожиддин</p>
+            <p><b>Телефон:</b> +998903282754</p>
+            <p><b>Телеграам:</b> <a href="https://t.me/ikromovssss">Сирожиддин</a></p>
+        </div>
+    </div>
+    <footer>
+        <h3>Bizning kanallar</h3>
+        <div class="qrcodes">
+            <div class="qrcode">
+                <div class="qrtext">
+                    <img class="tqcode" src="./images/svg/Fourgreen_qrcode.svg" />
+                    <b>Telegram:<a href="https://t.me/fourgreen_uzb">Fourgreen</a></b>
+                </div>
+                <div class="qrtext">
+                    <img class="tqcode" src="./images/svg/Various_autoparts_qrcode.svg" />
+                    <b>Telegram:<a href="https://t.me/Various_autoparts">Various</a></b>
+                </div>
+            </div>
+            <div class="qrcode">
+                <div class="qrtext">
+                    <img class="tqcode" src="./images/svg/Four ins.svg" />
+                    <b>Instagram: <a href="https://www.instagram.com/fourgreen.uzb?igsh=NXR6eHJjaGtlODgx">Fourgreen</a></b>
+                </div>
+                <div class="qrtext">
+                    <img class="tqcode" src="./images/svg/Various ins.svg" />
+                    <b>Instagram: <a href="https://www.instagram.com/various_autoparts?igsh=azhmdzRwZjlvdDF0">Various</a></b>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+@code {
+
+}
+
+<style>
+    .Ourabout {
+        width: 100%;
+        height: auto;
+    }
+
+    .logo {
+        padding: 10px;
+        width: 100%;
+        height: 120px;
+        display: flex;
+        flex-direction: row;
+        gap: 2px;
+    }
+
+    .text {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .text h1 {
+            text-align: center;
+            font-family: Arial
+        }
+
+        .text p {
+            text-align: center;
+            font-size: 12px;
+            font-family: Arial;
+        }
+
+    .image {
+        border-radius: 10px;
+        width: 120px;
+        height: 120px
+    }
+
+    .Ourabout h1 {
+        text-align: center;
+    }
+
+    .worker {
+        padding: 10px;
+        display: flex;
+        font-family: Arial;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .order {
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .menegers {
+        font-size: 16px;
+        width: auto;
+        height: auto;
+        background: linear-gradient(72deg, rgba(209, 209, 209, 1) 0%, rgba(208, 208, 208, 1) 50%, rgba(162, 165, 166, 1) 100%);
+        padding: 10px;
+        border-radius: 19px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .menegers h5 {
+        margin: 0px;
+    }
+
+        .menegers p {
+            margin: 0px;
+        }
+    footer {
+        font-family: Arial;
+        padding: 10px;
+        width: 100%;
+        height: 150px;
+        margin-top: 10px;
+    }
+
+    .qrcodes {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .qrcode {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .qrtext {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .qrtext b {
+            font-size: 14px;
+            text-align: center;
+        }
+
+    .tqcode {
+        width: 150px;
+        height: 150px;
+    }
+</style>

@@ -1,0 +1,90 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <img src="/images/png/Fourgreen_Logo.png" style="width: 180px;" />
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="adduser">
+                <span style="color: white;" class="oi oi-person" aria-hidden="true"></span>
+                <p style="font-size: 20px; margin-top: 16px;">Ишчилар</p>
+
+            </NavLink>
+        </div>
+        <Menu Mode="MenuMode.Inline"
+              Style="background-color: #0B7649; width:250px; "
+              OpenKeys="this.openKeys"
+              OnOpenChange="this.onOpenChange">
+
+
+            <SubMenu Key="carspare" TitleTemplate="carspare">
+                <MenuItem Key="sparepartbrands">
+                    <NavLink class="nav-link" href="sparepartbrands">
+                        <span aria-hidden="true"></span> Запчастлар Brandlar
+                    </NavLink>
+                </MenuItem>
+                <MenuItem Key="spareparts">
+                    <NavLink class="nav-link" href="spareparts">
+                        <span aria-hidden="true"></span> Запчаст Турлари
+                    </NavLink>
+                </MenuItem>
+                <MenuItem Key="sparepartsinfo">
+                    <NavLink class="nav-link" href="sparepartsinfo">
+                        <span aria-hidden="true"></span> Запчастлар Рўйхати
+                    </NavLink>
+                </MenuItem>
+            </SubMenu>
+
+        </Menu>
+
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+
+    RenderFragment carspare =
+    @<span>
+        <Icon Type="car" Theme="outline" Style="color: white; font-size: 18px;" />
+        <span style="color: white; font-size: 18px;">
+            Ехтиёт Қисимлар
+        </span>
+    </span>
+    ;
+
+
+    string[] rootSubmenuKeys = {"carspare" };
+
+    string[] openKeys = { "" };
+
+    void onOpenChange(string[] openKeys)
+    {
+        var latestOpenKey = openKeys.FirstOrDefault(key => !this.openKeys.Contains(key));
+        if (!rootSubmenuKeys.Contains(latestOpenKey))
+        {
+            this.openKeys = openKeys;
+        }
+        else
+        {
+            this.openKeys = !string.IsNullOrEmpty(latestOpenKey) ? new[] { latestOpenKey } : Array.Empty<string>();
+        }
+    }
+}

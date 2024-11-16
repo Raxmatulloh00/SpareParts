@@ -1,0 +1,137 @@
+﻿@page "/sparepartbrands"
+@inject NavigationManager NavigationManager
+@inject ISparePartBrandsActions SparePartBrandsActions
+@inject BrandImage brandImage
+@inject IConfiguration config
+@inject IJSRuntime js
+
+<div style="width: 100%; height: auto; display: flex; flex-direction: row; justify-content: space-between;margin-bottom:15px;">
+    <h3>Брeндлар</h3>
+
+    <button @onclick="NavigatoAddSparePartBrands" class="btn" style="background-color: #80DF95; width: auto; height:40px; display: flex; gap: 5px;">
+        <Icon Type="plus" Theme="outline" Style="margin-top: 7px;" />
+        <p style="margin-top:2px; font-size: 18px;">Брeндлар Қўшиш</p>
+    </button>
+</div>
+@if (sparePartBrands != null)
+{
+    <div class="pagebox">
+        @foreach (var item in sparePartBrands)
+        {
+
+            <div class="box">
+                <div class="image">
+
+                    @if (item?.sparePartBrandsImages.Count > 0)
+                    {
+                            @foreach (var items in item.sparePartBrandsImages)
+                            {
+                                    <Image Src="@items.ImageURl" Style="width:159px; height:150px;" />
+                            }
+                    }
+                    else
+                    {
+                        <div>
+                            <Image Src="../images/png/images.jpg" Style="width: 159px; height: 100px;" />
+                        </div>
+                    }
+
+                </div>
+                <div class="textbtn">
+                    <p>@item.Name</p>
+                    <button type="button" @onclick="(() => EditSparePartBrands(item))" class="btn" style="background-color: #80DF95;">Ўзгартириш</button>
+                    <button type="button" @onclick="(() => DeleteSparePartBrands(item))" class="btn" style="background-color: #F78C8C;">Ўчириш</button>
+                </div>
+            </div>
+        }
+    </div>
+
+}
+@code {
+    private List<SparePartBrands> sparePartBrands;
+    Carousel carousel;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        LoadSparePartBrands();
+        StateHasChanged();
+    }
+
+    public void LoadSparePartBrands()
+    {
+        sparePartBrands = SparePartBrandsActions.View().ToList();
+        foreach (var item in sparePartBrands)
+        {
+            item.sparePartBrandsImages = brandImage.GetBySparePartBrandsId(item.Id).ToList();
+        }
+        StateHasChanged();
+
+    }
+
+    public void NavigatoAddSparePartBrands()
+    {
+        NavigationManager.NavigateTo("/addsparepartbrands");
+        StateHasChanged();
+    }
+
+    private void EditSparePartBrands(SparePartBrands sparePartBrands)
+    {
+        NavigationManager.NavigateTo($"/editsparepartbrands/{sparePartBrands.Id}");
+        StateHasChanged();
+    }
+
+    private void DeleteSparePartBrands(SparePartBrands sparepartbrandsid)
+    {
+        SparePartBrandsActions.Delete(sparepartbrandsid.Id);
+        foreach (var item in sparepartbrandsid.sparePartBrandsImages)
+        {
+            string path = Path.Combine(config.GetValue<string>("FileStorage")!, "uploadimages", item.ImageName);
+            File.Delete(path);
+        }
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        StateHasChanged();
+    }
+}
+<style>
+    .box {
+        max-width: max-content;
+        height: auto;
+        padding: 20px;
+        border: 2px solid black;
+        border-radius: 20px;
+        margin-bottom: 15px;
+    }
+
+    .pagebox {
+        margin: 30px;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        grid-gap: 30px;
+    }
+
+    .textbtn {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .textbtn p {
+            text-align: center;
+            font-size: 20px;
+            font-family: Calibri;
+            font-weight: 900;
+            margin: 0;
+            margin-top: 3px;
+        }
+
+        .textbtn button {
+            margin-top: 5px;
+        }
+
+    .image {
+        margin-left: 3px;
+        width: 159px;
+        height: 150px;
+    }
+</style>

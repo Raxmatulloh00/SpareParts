@@ -1,0 +1,121 @@
+﻿@inject SparePartsRepository SparePartsRepository
+@inject NavigationManager NavigationManager
+@layout BotLayout
+@page "/order/{userId}"
+
+<div class="page">
+    <div class="image">
+        <img src="./images/svg/Logo.svg" />
+    </div>
+    <h1>Бизнинг Брeндлар</h1>
+    <div class="brands">
+        @foreach (var item in brandModels)
+        {
+
+            <div class="btntext">
+                <button @onclick="(() => NavigateBrandId(item.Id,UserId))" class="btnimg">
+                    <img src="@item.ImgUrl" />
+                </button>
+                <p>@item.Name </p>
+            </div>
+        }
+    </div>
+</div>
+@code {
+    [Parameter]
+    public string? userId { get; set; }
+    public int UserId => int.TryParse(userId, out int uId) ? uId : 0;
+    int _oldBrandId = 1;
+    public List<BrandModel> brandModels = new();
+    public List<BrandModel> groupbrandModels = new();
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        GetBrand();
+        StateHasChanged();
+    }
+
+    public void GetBrand()
+    {
+        brandModels = SparePartsRepository.GetBrands();
+    }
+
+    public void NavigateBrandId(int id,int userid)
+    {
+        NavigationManager.NavigateTo($"/ordermenue/{id}/{userid}");
+        StateHasChanged();
+    }
+}
+<style>
+    .page {
+        width: 100%;
+        height: auto;
+    }
+
+    .image {
+        width: 100%;
+        height: 100px;
+        display: flex;
+        justify-content: center;
+    }
+
+    h1 {
+        margin-top: 15px;
+        color: gray;
+        font-family: Arial;
+        font-weight: bold;
+        font-size: 20px;
+        margin-left: 5px;
+    }
+
+    .brands {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+        display: flex;
+        gap: 25px;
+        overflow-x: auto;
+        background-image: url(/images/png/Group41.jpg);
+        background-repeat: no-repeat;
+        background-size: cover;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-around;
+        background-size: cover;
+    }
+
+    .btntext {
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+        .btntext .btnimg {
+            font-size: 100%;
+            width: 130px;
+            height: 100px;
+            position: relative;
+            border: none;
+            border-radius: 20px;
+        }
+
+    .btnimg img {
+        position: absolute;
+        width: 100%;
+        height: 100px;
+        top: 0;
+        left: 0;
+        border-radius: 20px;
+    }
+
+    .btntext p {
+        font-family: Calibri;
+        font-weight: bold;
+        color: white;
+        font-size: larger;
+        margin:0px;
+    }
+</style>

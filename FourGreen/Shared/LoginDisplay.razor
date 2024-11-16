@@ -1,0 +1,56 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+
+        <div class="logname">
+            <a href="Identity/Account/Manage"> @context.User.Identity.Name!</a>
+            <form style="margin-top: -10px;" action="Identity/Account/Logout?returnUrl=%2F" method="post">
+                <button type="submit" class="nav-link btn btn-link">Log out</button>
+            </form>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <iframe src="Identity/Account/Login">
+
+        </iframe>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+
+}
+
+<style>
+    * {
+        font-family: Calibri;
+    }
+
+    .logname {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        justify-content: space-around;
+    }
+
+        .logname a {
+            font-size: 20px;
+            color: #8e8e8e;
+            transition: color .15s ease-in-out;
+            margin-top:1.5px;
+        }
+
+        .logname button {
+            color: white;
+            font-size: 20px;
+            margin-top:3px;
+            font-weight: no
+        }
+
+    .login {
+        font-size: 20px;
+        color: #8e8e8e;
+        transition: color .15s ease-in-out;
+    }
+</style>

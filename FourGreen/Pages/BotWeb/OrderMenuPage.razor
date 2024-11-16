@@ -1,0 +1,466 @@
+﻿@page "/ordermenue/{BrandId}/{userId}"
+@using FourGreen.DataUser;
+@using FourGreen.Modals;
+@layout BotLayout
+@inject SparePartsRepository SparePartsRepository
+@inject ISparePartBrandsActions SparePartBrandsActions
+@inject NavigationManager NavigationManager
+@inject CartService cartService
+@inject IJSRuntime JSRuntime
+
+<div class="page">
+    @if (chosenBrand != null)
+    {
+
+        <div class="iconlogo">
+            <i @onclick="(() => Cancle(UserId))" class="fa-solid fa-arrow-left"></i>
+            <img class="log" src="./images/svg/Logo.svg" />
+            @*  *@
+            <i @onclick="(() => CartPage(UserId))" class="fa-solid fa-cart-shopping cart"></i>
+            <Badge Style="position:absolute;left: 300px;top: 41px;" Size="default" Count="myCart.CartProducts.Count()">
+                <a href="#" class="head-example" />
+            </Badge>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1; overflow:auto;">
+            <div class="brand">
+                <img src="@chosenBrand.ImgUrl">
+                <p>@chosenBrand.Name</p>
+            </div>
+            <div class="categorys">
+                @foreach (var item in categoryModal)
+                {
+                    <div class="@($"{(selectedCategory==item.Id ? "active-a" : "a")}")">
+
+                        <a @onclick="e=>CaategoryChanges(item.Id)">@item.Name</a>
+                    </div>
+                }
+            </div>
+            <div id="12" class="spareparts">
+                @foreach (var item in DisplayInfoModels)
+                {
+
+                    <div class="card">
+                        <div class="image">
+                            <img src="@item.ImageUrl">
+                        </div>
+                        <p>@item.Price $</p>
+                        <p class="description">@item.Name</p>
+                        <p class="nalicha">Сотувда шунча: @item.Quantity</p>
+
+                        @if (myCart.CartProducts.FirstOrDefault(f => f.Id == item.Id) != null)
+                        {
+                            <div style="display:flex; flex-direction:row; gap:10px; justify-content:space-between;">
+
+
+                                <button disabled="@(loading || myCart.CartProducts.FirstOrDefault(f => f.Id == item.Id)!.Qty == 0)" class="minus" @onclick="e=>TaskHandleCart(item,-1)">
+                                    <i class="fa-solid fa-minus" style="color: #ffffff;"></i>
+                                </button>
+
+                                <span class="qty">@myCart.CartProducts.FirstOrDefault(f => f.Id == item.Id)!.Qty</span>
+
+                                <button disabled="@(loading || item.Quantity == 0)" class="plus" @onclick="e=>TaskHandleCart(item, 1)">
+                                    <i class="fa-solid fa-plus" style="color: #ffffff;"></i>
+                                </button>
+
+                            </div>
+
+                        }
+                        else
+                        {
+                            <button class="addbtn" @onclick="e=>TaskHandleCart(item,1)">Саватга қошиш</button>
+                        }
+
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+@if (true)
+{
+    AddSwipeListener("12");
+}
+@code {
+    [Parameter]
+    public string userId { get; set; }
+    public int UserId => int.TryParse(userId, out int uId) ? uId : 0;
+    [Parameter]
+    public string? BrandId { get; set; }
+    public MyCart myCart = new();
+    private int brandId => int.TryParse(BrandId, out int id) ? id : 0;
+    public BrandModel chosenBrand = new();
+    public List<SparePartsModel> categoryModal = new();
+    public List<SparePartsInfoModel> sparePartsInfoModels = new();
+    public List<SparePartsInfoModel> DisplayInfoModels = new();
+    int selectedCategory;
+    int selectbutton;
+    public List<BrandModel> brandModels = new();
+    bool loading = false;
+    protected override void OnInitialized()
+    {
+
+        base.OnInitialized();
+        GetCotegory();
+        GetBrands();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            myCart = new();
+            @*await cartService.Delete();*@
+            myCart = await cartService.GetMyCartItems(UserId);
+            StateHasChanged();
+        }
+    }
+    public void GetBrands()
+    {
+        brandModels = SparePartsRepository.GetBrands();
+    }
+    async Task TaskHandleCart(SparePartsInfoModel modal, int qty)
+    {
+        try
+        {
+            loading = true;
+            CartProduct product = new(modal.Id, modal.Name, modal.BrandName, modal.TypeName, modal.ImageUrl, 1, modal.Price);
+            var viewProduct = DisplayInfoModels.FirstOrDefault(f => f.Id == modal.Id);
+            if (qty > 0)
+            {
+                if (viewProduct?.Quantity < 1)
+                    return;
+                myCart = await cartService.PlusCart(product, UserId);
+                viewProduct!.Quantity--;
+            }
+            else
+            {
+                if (myCart.CartProducts.FirstOrDefault(f => f.Id == viewProduct?.Id)?.Qty == 0)
+                    return;
+                myCart = await cartService.MinusToCart(product, UserId);
+                viewProduct!.Quantity++;
+            }
+            if (viewProduct != null)
+                SparePartsRepository.UpdateQty(viewProduct);
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    void GetChosenBrand()
+    {
+        var brand = SparePartBrandsActions.GetSparePartBrandsId(brandId);
+        chosenBrand = new()
+            {
+                Id = brand.Id,
+                Name = brand.Name ?? "",
+                ImgUrl = brand.sparePartBrandsImages?.FirstOrDefault()?.ImageURl ?? "",
+            };
+        GetCotegory();
+        if (categoryModal.FirstOrDefault() != null)
+        {
+            CaategoryChanges(categoryModal.FirstOrDefault().Id);
+        }
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            GetChosenBrand();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+
+    private void GetCotegory()
+    {
+        sparePartsInfoModels = SparePartsRepository.GetProducts();
+        categoryModal = sparePartsInfoModels.Where(y => y.BrandId == brandId).GroupBy(x => x.TypeId).Select(y => new SparePartsModel
+            {
+                Brandid = brandId,
+                Id = y.Key,
+                Name = y.FirstOrDefault().TypeName,
+            }).ToList();
+        // if (sparePartsInfoModels.FirstOrDefault()!=null)
+        // {
+        //     CaategoryChanges(sparePartsInfoModels.FirstOrDefault().BrandId);
+        // }
+        StateHasChanged();
+    }
+    void CaategoryChanges(int id)
+    {
+        selectedCategory = id;
+        selectbutton = id;
+        DisplayInfoModels = sparePartsInfoModels.Where(w => w.TypeId == id && w.BrandId == brandId).ToList();
+        StateHasChanged();
+    }
+
+    private void CartPage(int userid)
+    {
+        NavigationManager.NavigateTo($"/cart/{userid}");
+    }
+
+    private void Cancle(int id)
+    {
+        NavigationManager.NavigateTo($"/order/{id}");
+    }
+    private bool inCooldown = false;
+    private async void coolDown()
+    {
+        if (inCooldown)
+            return;
+        inCooldown = true;
+        await Task.Delay(500);
+        inCooldown = false;
+    }
+
+    [JSInvokable("HandleSwipe")]
+    public async Task HandleSwipe(string productId, string direction)
+    {
+        //Find the product by its ID and update its interface
+        try
+        {
+            if (!inCooldown)
+            {
+                coolDown();
+                var brand = brandModels.FirstOrDefault(f => f.Id == chosenBrand.Id) ?? new();
+                var index = brandModels.IndexOf(brand);
+                if (direction == "left")
+                {
+                    int maxCount = brandModels.Count() - 1;
+                    if (index == maxCount)
+                        return;
+                    index = index + 1;
+                    BrandId = brandModels[index].Id.ToString();
+                    GetChosenBrand();
+                    // Handle left swipe
+                }
+                else if (direction == "right")
+                {
+                    if (index == 0)
+                        return;
+                    index = (index - 1);
+                    BrandId = brandModels[index].Id.ToString();
+                    GetChosenBrand();
+                    // Handle right swipe
+                }
+            }
+        }
+        catch (Exception)
+        {
+
+        }
+        finally
+        {
+            // Trigger UI update
+            StateHasChanged();
+        }
+
+    }
+}
+
+@functions {
+    private async Task AddSwipeListener(string productd)
+    {
+        await JSRuntime.InvokeVoidAsync("addSwipeListener", productd, DotNetObjectReference.Create(this));
+    }
+}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .page {
+        width: 100vw;
+        height: auto;
+    }
+
+    .iconlogo {
+        width: auto;
+        height: 100px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background: white;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+        .iconlogo i {
+            left: 20px;
+            top: 35px;
+            font-size: 28px;
+            position: absolute;
+        }
+
+        .iconlogo .log {
+            margin-left: 50px;
+            margin-top: 10px;
+            position: absolute;
+        }
+
+        .iconlogo .cart {
+            margin-top: 8px;
+            margin-left: 270px;
+        }
+
+    .categorys {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        margin-top: 5px;
+        overflow-x: auto;
+        align-items: center;
+        border-bottom: 2px solid gray;
+    }
+
+    .a {
+        font-size: 20px;
+        color: #484848;
+        font-family: Calibri;
+    }
+
+    .active-a {
+        width: auto;
+        height: auto;
+        border-radius: 10px;
+        padding: 6px;
+        background-color: #484848;
+        color: white;
+        font-size: 20px;
+        font-family: Calibri;
+        font-weight: bold;
+    }
+
+    .brand {
+        width: 100%;
+        height: 150px;
+        padding: 10px 20px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 10px;
+        background-image: url("./images/png/Group40.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+        .brand img {
+            width: 160px;
+            height: 100%;
+            border-radius: 20px;
+        }
+
+        .brand p {
+            color: white;
+            font-family: Calibri;
+            font-weight: bold;
+            font-size: 30px;
+            margin-top: 40px;
+        }
+
+    .spareparts {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        justify-content: space-around;
+    }
+
+        .spareparts .card {
+            width: 160px;
+            margin-bottom: 10px;
+            height: 280px;
+            padding: 5px;
+            background-color: #E8E8E8;
+            border-radius: 10px;
+        }
+
+            .spareparts .card .image {
+                width: 100%;
+                height: 150px;
+                border-radius: 10px;
+                background-color: white;
+            }
+
+            .spareparts .card .minus {
+                width: 35px;
+                height: 35px;
+                background-color: indianred;
+                border-radius: 10px;
+                align-content: center
+            }
+
+            .spareparts .card .qty {
+                font-size: 25px;
+                text-align: center;
+            }
+
+            .spareparts .card .plus {
+                width: 35px;
+                height: 35px;
+                background-color: greenyellow;
+                border-radius: 10px;
+            }
+
+    .image img {
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+    }
+
+    .nameqty {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .description {
+        margin-bottom: 0;
+        color: black;
+        font-size: small;
+        font-family: Calibri;
+        font-weight: bold;
+    }
+
+    p {
+        color: #787878;
+        font-size: 18px;
+        margin-bottom: 0;
+    }
+
+    .nalicha {
+        font-size: 12px;
+        color: #207532;
+        font-weight: bold;
+        font-family: Arial;
+        margin-bottom: 10px;
+    }
+
+    .addbtn {
+        height: 35px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: bold;
+        border: none;
+        background-color: #FFFFFF;
+    }
+</style>

@@ -1,0 +1,108 @@
+﻿@page "/addsparepartbrands"
+@inject NavigationManager NavigationManager
+@inject ISparePartBrandsActions SparePartBrandsActions
+@inject IConfiguration config
+@inject IMessageService _messege
+@inject BrandImage brandImage
+
+<h3>Брeндлар Қўшиш</h3>
+
+@if (sparePartBrands != null)
+{
+    <Microsoft.AspNetCore.Components.Forms.EditForm Model="sparePartBrands">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <ValidationSummary></ValidationSummary>
+        <div class="from-group">
+            <div style="display:flex; justify-content:space-between">
+                <label style="font-family: 'Bookman Old Style'" for="city">Расмлар</label>
+                <Microsoft.AspNetCore.Components.Forms.InputFile id="files" OnChange="LoadFiles" />
+            </div>
+            @foreach (var item in sparePartBrandsImages)
+            {
+                <img src="@item.ImageURl" width="100" height="100" style="border: black 3px solid; margin-right: 10px; margin-bottom: 7px" />
+
+            }
+        </div>
+        <div class="from-group">
+            <label>Брeндлар номи</label>
+            <InputText id="name" @bind-Value="sparePartBrands.Name" class="form-control" />
+        </div>
+        <br>
+        <button type="submit" class="btn" style="background-color: #80DF95; margin-right: 10px;" @onclick="e=> Submit()">Сақлаш</button>
+        <button type="button" class="btn" style="background-color: #F78C8C;" @onclick="Cancel">Бекор қилиш</button>
+    </Microsoft.AspNetCore.Components.Forms.EditForm>
+}
+@code {
+    List<SparePartBrandsImage> sparePartBrandsImages = new List<SparePartBrandsImage>();
+    private SparePartBrands? sparePartBrands;
+    int BrandsIdForImages;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        sparePartBrands = new SparePartBrands();
+        StateHasChanged();
+    }
+    private void Submit ()
+    {
+        BrandsIdForImages = SparePartBrandsActions.Add(sparePartBrands);
+        @foreach (var item in sparePartBrandsImages)
+        {
+            item.SparePartBrandId = BrandsIdForImages;
+            brandImage.AddImage(item);
+        }
+        NavigationManager.NavigateTo("/sparepartbrands");
+        StateHasChanged();
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/sparepartbrands");
+        StateHasChanged();
+    }
+
+
+    async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        long maxSize = 1024 * 1024 * 3;
+
+        foreach (var file in e.GetMultipleFiles())
+        {
+            try
+            {
+                var isJpgOrPng = file.Name.EndsWith("jpeg") || file.Name.EndsWith("png") || file.Name.EndsWith("jpg");
+
+                if (file.Size < maxSize)
+                {
+                    if (isJpgOrPng)
+                    {
+                        string newFileName = Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(file.Name));
+                        string path = Path.Combine(config.GetValue<string>("FileStorage")!, "uploadimages", newFileName);
+
+                        Directory.CreateDirectory(Path.Combine(config.GetValue<string>("FileStorage")!, "uploadimages"));
+
+                        await using FileStream fs = new(path, FileMode.Append);
+                        await file.OpenReadStream(maxSize).CopyToAsync(fs);
+
+                        SparePartBrandsImage image = new SparePartBrandsImage
+                            {
+                                ImageURl = $"/uploadimages/{newFileName}",
+                                ImageName = newFileName,
+                            };
+                        sparePartBrandsImages.Add(image);
+                        //apply.PhotoPath = $"https://localhost:44349/uploadimages/{newFileName}";
+
+                    }
+                    else
+                        await _messege.Error("Вы можете загружать только JPG/PNG файл!");
+                }
+                else
+                    await _messege.Error("Вы не можете загружать файл более 3 мб!");
+            }
+            catch (Exception ex)
+            {
+                await _messege.Error(ex.Message);
+            }
+        }
+    }
+}

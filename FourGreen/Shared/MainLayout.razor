@@ -1,0 +1,95 @@
+﻿@inherits LayoutComponentBase
+<CascadingValue Value="this">
+    <AuthorizeView>
+        <Authorized>
+            <PageTitle>
+                <img src="/images/png/Fourgreen_Logo.png" />
+
+            </PageTitle>
+
+
+            <header class="site-header">
+                <nav class="links">
+                    <a href="" class="ant-dropdown-link">Заказлар</a>
+
+                    <Dropdown>
+                        <Overlay>
+                            <Menu>
+                                <MenuItem @key="0">
+                                    <a href="sparepartbrands">Запчаст Брендлари</a>
+                                </MenuItem>
+                                <MenuItem @key="1">
+                                    <a href="spareparts">Запчаст Турлари </a>
+                                </MenuItem>
+                                <MenuItem @key="2">
+                                    <a href="sparepartsinfo">Запчаст Рўйхатлари</a>
+                                </MenuItem>
+                            </Menu>
+                        </Overlay>
+                        <ChildContent>
+                            <a class="ant-dropdown-link">Ехтиёт Қисимлар<Icon Type="down" /></a>
+                        </ChildContent>
+                    </Dropdown>
+                    <a href="adduser">Ишчилар</a>
+                </nav>
+                <div class="login">
+                    <LoginDisplay></LoginDisplay>
+                </div>
+            </header>
+
+            <main class="content">
+                @Body
+            </main>
+        </Authorized>
+        <NotAuthorized>
+            @* <a class="login" style="" href="Identity/Account/Login">Log in</a> *@ 
+            <iframe src="Identity/Account/Login" style="width:100%; height:99%;">
+            </iframe>
+            @* <Login/> *@
+        </NotAuthorized>
+    </AuthorizeView> 
+</CascadingValue>
+
+@code {
+
+}
+<style>
+
+    .site-header {
+        width: 100%;
+        height: 70px;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, .85);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        backdrop-filter: saturate(180%) blur(20px);
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .links {
+        padding: 10px;
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+    }
+
+    .content {
+        padding: 15px
+    }
+
+    .login {
+        padding: 10px;
+    }
+
+    .site-header a {
+        font-size: 20px;
+        color: #8e8e8e;
+        transition: color .15s ease-in-out;
+    }
+
+        .site-header a:hover {
+            color: #fff;
+            text-decoration: none;
+        }
+</style>

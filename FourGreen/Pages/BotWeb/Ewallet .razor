@@ -1,0 +1,155 @@
+﻿@inject SparePartsRepository SparePartsRepository
+
+@layout BotLayout
+
+
+<div class="Order">
+    <div class="imgtext">
+        <img src="./images/png/photo_2024-01-09_02-02-38.jpg" />
+        <p><b><i>Various_autoparts</i></b></p>
+    </div>
+    @if (brandModels != null)
+    {
+
+        <div class="menu">
+            @foreach (var item in brandModels)
+            {
+                <a @onclick="e=>BrandChanged(item.Id)" class="@($"{(selectedBrand==item.Id ? "active-a" : "")}")">@item.Name</a>
+
+            }
+        </div>
+
+        <div class="spare_menu">
+
+            @foreach (var item in sparePartsInfoDisplay)
+            {
+                @if (brandModels.Any(x => x.Id == item.BrandId))
+                {
+                    @foreach (var x in sparePartsModels)
+                    {
+                        <p>@x.Name</p>
+                    }
+                }
+            }
+            @*
+        @foreach (var item in sparePartsModels)
+        {
+        <h3>@item.Name</h3>
+        @foreach (var items in sparePartsInfoDisplay)
+        @if (item.Id == items.TypeId)
+        {
+        <h2>@items.Name</h2>
+        }
+        } *@
+        </div>
+    }
+
+</div>
+
+
+@code {
+    public List<BrandModel> brandModels = new();
+    public List<SparePartsModel> sparePartsModels = new();
+    public List<SparePartsInfoModel> sparePartsInfoDisplay = new();
+    public List<SparePartsInfoModel> sparePartsInfoModels = new();
+    int selectedBrand;
+
+    protected override void OnInitialized()
+    {
+        LoadSparePart();
+        SpareParts();
+        GetCategories();
+        StateHasChanged();
+    }
+    public void LoadSparePart()
+    {
+        brandModels = SparePartsRepository.GetBrands();
+    }
+    void BrandChanged(int id)
+    {
+        selectedBrand = id;
+        sparePartsInfoDisplay = sparePartsInfoModels.Where(w => w.TypeId == id).ToList();
+        StateHasChanged();
+    }
+    void SpareParts()
+    {
+        sparePartsInfoModels = SparePartsRepository.GetProducts();
+        StateHasChanged();
+
+    }
+    public void GetCategories()
+    {
+
+        sparePartsModels = sparePartsInfoModels.GroupBy(x => x.TypeId).Select(y => new SparePartsModel
+            {
+                Id = y.Key,
+                Name = y.FirstOrDefault().Name
+                // Id = y.FirstOrDefault().Id,
+                // Name = y.FirstOrDefault().TypeName
+
+            }).ToList();
+        StateHasChanged();
+    }
+}
+
+<style>
+    .Order {
+        width: 100%;
+        height: auto;
+    }
+
+    .imgtext {
+        padding: 5px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
+    }
+
+        .imgtext img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+
+
+        .imgtext p {
+            margin-top: 25px;
+            font-size: 18px;
+            line-height: 10px;
+        }
+
+    .menu {
+        padding: 5px;
+        height: 60px;
+        display: flex;
+        border-bottom: 3px dotted black;
+        overflow-x: auto;
+    }
+
+
+
+        .menu a {
+            margin: 10px;
+            color: gray;
+            font-size: 18px;
+        }
+
+
+    .active-a {
+        margin-top: 3px !important;
+        margin-left: 20px !important;
+        margin-right: 20px !important;
+        color: black !important;
+        font-size: 24px !important;
+        font-family: Calibri !important;
+        font-weight: bold;
+    }
+
+    .spare_menu {
+        width: 100%;
+        height: auto;
+        padding: 15px;
+        background-color: red;
+    }
+</style>

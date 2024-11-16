@@ -1,0 +1,81 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div id="@mapId" class="map">
+    @if (OrderMapCouriers != null)
+    {
+        @OrderMapCouriers
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid mapId { get; set; } = Guid.NewGuid();
+    [Parameter]
+    public RenderFragment? OrderMapCouriers { get; set; }
+    [Parameter]
+    public double Lat { get; set; }
+    [Parameter]
+    public double Long { get; set; }
+    [Parameter]
+    public bool IsDelivery { get; set; }
+    [Parameter]
+    public EventCallback<(string, string)> SendCoords { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var lDotNetReference = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("initYandex", mapId, Lat, Long, IsDelivery, lDotNetReference, true);
+        }
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            var lDotNetReference = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("initYandex", mapId, Lat, Long, IsDelivery, lDotNetReference, false);
+        }
+        catch (Exception)
+        {
+            
+        }
+    }
+
+    // public async Task ChangeCoords(double Lat, double Long)
+    // {
+    //     try
+    //     {
+    //         var lDotNetReference = DotNetObjectReference.Create(this);
+    //         await JSRuntime.InvokeVoidAsync("initYandex", mapId, Lat, Long, IsDelivery, lDotNetReference, false);
+    //         // await JSRuntime.InvokeVoidAsync("changeLocation", Lat, Long);
+    //     }
+    //     catch (Exception)
+    //     {
+
+    //     }
+    // }
+
+    [JSInvokable("GetCoordinates")]
+    public async void getCoordssdadsadsadsa(object lat, object longt)
+    {
+
+        var latstr = lat.ToString();
+        var longtstr = longt.ToString();
+        var type = lat.GetType();
+        var lati = decimal.TryParse(latstr, out decimal latt) ? latt : 0;
+        var longri = decimal.TryParse(longtstr, out decimal longstr) ? longstr : 0;
+        await SendCoords.InvokeAsync((latstr ?? "", longtstr ?? ""));
+        // SendCoords.InvokeAsync((lat, longt));
+    }
+}
+<style>
+    .map {
+        width: 100%;
+        height: 300px;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 5px;
+    }
+</style>

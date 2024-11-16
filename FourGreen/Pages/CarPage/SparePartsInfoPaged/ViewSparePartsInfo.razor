@@ -1,0 +1,184 @@
+﻿@page "/sparepartsinfo"
+@inject ISparePartsInfoActions SparePartsInfoActions
+@inject ISparePartBrandsActions SparePartBrandsActions
+@inject ISparePartsActions SparePartsActions
+@inject ImageRepositorys imageRepositorys
+@inject NavigationManager NavigationManager
+@inject IConfiguration config
+@inject IJSRuntime js
+
+<div style="width: 100%; height: auto; display: flex; flex-direction: row; justify-content: space-between;margin-bottom:15px;">
+    <h3>Запчастлар Рўйхати</h3>
+  
+    <button @onclick="AddSparePartsInfo" class="btn" style="background-color: #80DF95; width: auto; height:40px; display: flex; gap: 5px;">
+        <Icon Type="plus" Theme="outline" Style="margin-top: 7px;" />
+        <p style="margin-top:2px; font-size: 18px;">Запчаст Қўшиш</p>
+    </button>
+</div>
+
+
+@if (sparePartsInfos != null)
+{
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Расмлар</th>
+                <th>Брeндлар номи</th>
+                <th>Запчаст Тури</th>
+                <th>Запчастлар Номи</th>
+                <th>Каталoг рақами</th>
+                <th>Запчаст Сони</th>
+                <th>Запчаст Нархи</th>
+                <th>Ҳаракатлар</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in sparePartsInfos)
+            {
+                <tr>
+                    <td style="width: 110px; height: 110pxpx;">
+                        <div class="imgborder">
+
+                            <div class="tableimg">
+                                @if (item?.sparePartsInfoImages.Count > 0)
+                                {
+                                        @foreach (var s in item.sparePartsInfoImages)
+                                        {
+                                                <Image Src="@s.ImageURl" Style="width:100px; height:100px;" />
+                                        }
+                                }
+                                else
+                                {
+                                    <div>
+                                        <Image Src="../images/png/images.jpg" Style="width: 100px; height: 100px;" />
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="text"><p>@SparePartBrandsActions.GetSparePartBrandsId(item.SparePartBrandsConnectedId).Name</p></td>
+
+                    <td class="text"><p>@SparePartsActions.GetSparePartsId(item.SparePartsConnectedId).SparePartsName</p></td>
+
+                    <td class="text"><p>@item.SparePartsInfoName</p></td>
+
+                    <td class="text"><p>@item.CatologNumber</p></td>
+
+                    <td class="text"><p>@item.Quntity</p></td>
+
+                    <td class="text"><p>@item.Price ⨎</p></td>
+
+                    <td class="btns">
+                        <div class="button">
+
+                            <button @onclick="@(() => EditSparePartsInfo(item))" class="btn" style="background-color: #80DF95; height:40px; margin-right:5px;">Ўзгартириш</button>
+                            <button @onclick="@(() => DeleteSparePartsInfo(item))" class="btn" style="background-color: #F78C8C; height: 40px;">Ўчириш</button>
+                        </div>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+@code {
+    private List<SparePartsInfo> sparePartsInfos;
+    private SparePartsInfo sparePartsinfoDetails;
+    Carousel carousel;
+    string title = "Запчаст ҳақида";
+    bool _visible = false;
+    int rateCount;
+    decimal rateValue;
+    Rate rateControl;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        sparePartsInfos = SparePartsInfoActions.View().ToList();
+        foreach (var item in sparePartsInfos)
+        {
+            item.sparePartsInfoImages = imageRepositorys.GetBySparePartsId(item.SparePartsInfoId).ToList();
+        }
+        StateHasChanged();
+
+    }
+
+    private void AddSparePartsInfo()
+    {
+        NavigationManager.NavigateTo("/addsparepartsinfo");
+        StateHasChanged();
+
+    }
+
+    private void EditSparePartsInfo(SparePartsInfo sparePartsInfo)
+    {
+        NavigationManager.NavigateTo($"/editsparepartsinfo/{sparePartsInfo.SparePartsInfoId}");
+        StateHasChanged();
+    }
+
+    private void DeleteSparePartsInfo(SparePartsInfo sparePartsInfo)
+    {
+        SparePartsInfoActions.Delete(sparePartsInfo.SparePartsInfoId);
+        foreach (var item in sparePartsInfo.sparePartsInfoImages)
+        {
+            string path = Path.Combine(config.GetValue<string>("FileStorage")!, "uploadimages", item.ImageName);
+            File.Delete(path);
+        }
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        StateHasChanged();
+    }
+
+   
+}
+
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    .imgborder {
+        width: 105px;
+        height: 105px;
+        border: 3px solid black;
+    }
+
+    .tableimg {
+        width: 100px;
+        height: 100px;
+    }
+
+    th {
+        text-align: center;
+    }
+
+    .text {
+        text-align: center;
+    }
+
+        .text p {
+            margin-top: 50px;
+            font-family: Arial;
+        }
+
+    .btns {
+        text-align: end;
+        width: 50px;
+    }
+
+        .btns .button {
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+            .btns .button button {
+                width: 100%;
+            }
+
+</style>

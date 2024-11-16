@@ -1,0 +1,75 @@
+﻿@page "/spareparts"
+@inject NavigationManager NavigationManager
+@inject ISparePartsActions SparePartsActions
+
+<div style="width: 100%; height: auto; display: flex; flex-direction: row; justify-content: space-between;margin-bottom:15px;">
+    <h3>Запчаст Турлари</h3>
+    <button @onclick="NavigatoAddSpareParts" class="btn" style="background-color: #80DF95; width: auto; height:40px; display: flex; gap: 5px;">
+        <Icon Type="plus" Theme="outline" Style="margin-top: 7px;" />
+        <p style="margin-top:2px; font-size: 18px;">Запчаст Турини Қўшиш</p>
+    </button>
+</div>
+@if (spareParts != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Запчаст турлари </th>
+                <th>Ҳаракатлар</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in spareParts)
+            {
+                <tr>
+                    <td>@item.SparePartsName</td>
+                    <td>
+                        <button type="button" @onclick="(() => EditSpareParts(item))" class="btn" style="background-color: #80DF95; margin-right: 10px;">Ўзгартириш</button>
+                        <button type="button" @onclick="(() => DeleteSpareParts(item.SparePartsId))" class="btn" style="background-color: #F78C8C;">Ўчириш</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<SpareParts> spareParts;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        LoadCity();
+        StateHasChanged();
+
+    }
+
+    public void LoadCity()
+    {
+        spareParts = SparePartsActions.View().ToList();
+        StateHasChanged();
+
+    }
+
+    private void NavigatoAddSpareParts()
+    {
+        NavigationManager.NavigateTo("/addspareparts");
+        StateHasChanged();
+
+    }
+
+    private void EditSpareParts(SpareParts spareParts)
+    {
+        NavigationManager.NavigateTo($"/editspareparts/{spareParts.SparePartsId}");
+        StateHasChanged();
+
+    }
+
+    private void DeleteSpareParts(int sparepartsid)
+    {
+        SparePartsActions.Delete(sparepartsid);
+        spareParts = SparePartsActions.View().ToList();
+        StateHasChanged();
+
+    }
+}

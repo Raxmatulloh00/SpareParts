@@ -1,0 +1,49 @@
+﻿@page "/addspareparts"
+@inject NavigationManager NavigationManager
+@inject ISparePartsActions SparePartsActions
+<h3>Запчаст Турини Қўшиш</h3>
+
+@if (spareParts != null)
+{
+    <EditForm Model="spareParts">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <ValidationSummary></ValidationSummary>
+
+       
+
+        <div class="from-group">
+            <label class="name">Запчаст тури</label>
+            <InputText id="name" @bind-Value="spareParts.SparePartsName" class="form-control" />
+        </div>
+        <br>
+        <button type="submit" class="btn" @onclick="OnValidSubmit" style="background-color: #80DF95; margin-right: 10px;">Сақлаш</button>
+        <button type="button" class="btn" style="background-color: #F78C8C;" @onclick="Cancel">Бекор қилиш</button>
+    </EditForm>
+}
+
+@code {
+    private SpareParts spareParts;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        spareParts = new SpareParts();
+        StateHasChanged();
+
+    }
+    private void OnValidSubmit()
+    {
+
+        SparePartsActions.Add(spareParts);
+        NavigationManager.NavigateTo("/spareparts");
+        StateHasChanged();
+        
+      
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/spareparts");
+        StateHasChanged();
+    }
+}

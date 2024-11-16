@@ -1,0 +1,248 @@
+﻿@using ClosedXML.Excel
+@using FourGreen.Modals
+@using FourGreen.Pages.Shared.Map
+@using Info.BotUsers
+@using Newtonsoft.Json
+@using AntDesign
+@inject OrderRepository orderrepository
+@inject NavigationManager NavigationManager
+@inject SparePartsRepository sparePartsRepository
+@inject BotUserRepository botUserRepository
+@inject IJSRuntime jsRuntime
+
+@if (orderModels != null)
+{
+    <Collapse DefaultActiveKey="@(new[]{""})" OnChange="Callback">
+        <Panel Header="Доконга заказ берганлар" Key="1">
+            @if (orderModels.Count(w => w.Order.Type == OrderType.Takeout) > 0)
+            {
+                @foreach (var item in orderModels.Where(w => w.Order.Type == OrderType.Takeout))
+                {
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Заказ берган одамнинг исми</th>
+                                <th>Заказ берган одамнинг номери</th>
+                                <th>Заказ берган одамнинг закази</th>
+                                <th>Заказ берилган вохти</th>
+                                <th>Закази қабул қилинган қилиш</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@item.BotUser.Name</td>
+                                <td>@item.BotUser.PhoneNumber</td>
+                                <td>
+                                    <i style="font-size: 18px;" class="fa-regular fa-file-excel"></i>
+                                    <a style="font-size: 18px;" href="neworder" @onclick="e=> ToExcel(item.Products.ToList(), item.BotUser.Name)">Ехcелда кориш</a>
+                                </td>
+                                <td>@item.BotUser.CreateDate</td>
+                                <td>@item.Order.ConfirmedTime</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                }
+
+            }
+            else
+            {
+                <h5>Ҳозирча қабул қилинган заказлар йўқ</h5>
+            }
+        </Panel>
+        <Panel Header="Тошкент ичига заказ берганлар" Key="2">
+            @if (orderModels.Count(w => w.Order.Type == OrderType.Delivery) > 0)
+            {
+                @foreach (var item in orderModels.Where(w => w.Order.Type == OrderType.Delivery))
+                {
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Заказ берган одамнинг исми</th>
+                                <th>Заказ берган одамнинг номери</th>
+                                <th>Заказ берган одамнинг закази</th>
+                                <th>Докон номи</th>
+                                <th>Лакация</th>
+                                <th>Заказ берилган вохти</th>
+                                <th>Закази қабул қилинган қилиш</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@item.BotUser.Name</td>
+                                <td>@item.BotUser.PhoneNumber</td>
+                                <td>
+                                    <i style="font-size: 18px;" class="fa-regular fa-file-excel"></i>
+                                    <a style="font-size: 18px;" href="neworder" @onclick="e=> ToExcel(item.Products.ToList(), item.BotUser.Name)">Ехcелда кориш</a>
+                                </td>
+                                <td>@item.Order.StoreNo</td>
+                                <td>
+                                    <Button Class="btn" OnClick="@(()=> ShowLokation(item))">
+                                        📍Лакация
+                                    </Button>
+                                </td>
+                                <td>@item.BotUser.CreateDate</td>
+                                <td>@item.Order.ConfirmedTime</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                }
+            }
+            else
+            {
+                <h5>Ҳозирча қабул қилинган заказлар йўқ</h5>
+            }
+
+        </Panel>
+        <Panel Header="Вилоятга заказ берганлар" Key="3">
+            @if (orderModels.Count(w => w.Order.Type == OrderType.RegionDelivery) > 0)
+            {
+                @foreach (var item in orderModels.Where(w => w.Order.Type == OrderType.RegionDelivery))
+                {
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Заказ берган одамнинг исми</th>
+                                <th>Заказ берган одамнинг номери</th>
+                                <th>Заказ берган одамнинг закази</th>
+                                <th>Шафёр исми</th>
+                                <th>Шафёр номери</th>
+                                <th>Заказ берилган вохти</th>
+                                <th>Закази қабул қилинган қилиш</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@item.BotUser.Name</td>
+                                <td>@item.BotUser.PhoneNumber</td>
+                                <td>
+                                    <i style="font-size: 18px;" class="fa-regular fa-file-excel"></i>
+                                    <a style="font-size: 18px;" href="neworder" @onclick="e=> ToExcel(item.Products.ToList(), item.BotUser.Name)">Ехcелда кориш</a>
+                                </td>
+                                <td>@item.Order.DriverName</td>
+                                <td>+998 @item.Order.DriverNumber</td>
+                                <td>@item.BotUser.CreateDate</td>
+                                <td>@item.Order.ConfirmedTime</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                }
+            }
+            else
+            {
+                <h5>Ҳозирча қабул қилинган заказлар йўқ</h5>
+            }
+        </Panel>
+    </Collapse>
+}
+
+<Modal Title="Заказ берган одамнинг лакацияси"
+       @bind-Visible="@_visible">
+    <OrderMap @ref="orderMap" Lat="@(lati)" Long="@(longti)" IsDelivery="false" />
+
+</Modal>
+@code {
+    bool _visible = false;
+    [Parameter]
+    public List<OrderModel> orderModels { get; set; }
+    // public List<OrderModel> orderModels;
+    public OrderType orderType;
+    public MyCart myCart = new();
+    public List<SparePartsInfoModel> sparePartsInfoModels;
+    int userid;
+    double lati;
+    double longti;
+    OrderMap orderMap;
+    protected override void OnInitialized()
+    {
+        sparePartsInfoModels = sparePartsRepository.GetProducts();
+        orderModels = orderrepository.GetOrders(DeliveryStatus.Confirmed);
+        base.OnInitialized();
+        StateHasChanged();
+    }
+    public void ShowLokation(OrderModel order)
+    {
+        userid = order.BotUser.Id;
+        lati = Convert.ToDouble(order.Order.Lat);
+        longti = Convert.ToDouble(order.Order.Long);
+        _visible = true;
+        StateHasChanged();
+    }
+
+
+    void Callback(string[] keys)
+    {
+        Console.WriteLine(string.Join(',', keys));
+        StateHasChanged();
+    }
+
+    public void ToExcel(List<Products> products, string username)
+    {
+        using (var workbook = new XLWorkbook())
+        {
+            var worksheet = workbook.Worksheets.Add("Zakazi");
+
+            // Header Row
+            var headers = new[] { "Запчаст бренди", "Запчаст тури", "Запчаст номи", "Каталог рақами", "Заказ қилинганлар сони", "Запчаст нархи", "Нархи" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                worksheet.Cell(1, i + 1).Value = headers[i];
+                worksheet.Column(i + 1).Width = 25;  // Setting column width
+            }
+
+            // Filling Data Rows
+            for (int i = 0; i < products.Count; i++)
+            {
+                var product = products[i];
+                var sparePart = sparePartsInfoModels.Find(f => f.Id == product.productId);
+
+                worksheet.Cell(i + 2, 1).Value = product.productBrand;
+                worksheet.Cell(i + 2, 2).Value = product.productTaype;
+                worksheet.Cell(i + 2, 3).Value = product.productName;
+                worksheet.Cell(i + 2, 4).Value = sparePart?.CatalogNumber;
+                worksheet.Cell(i + 2, 5).Value = product.qty;
+                worksheet.Cell(i + 2, 6).Value = product.price;
+                worksheet.Cell(i + 2, 7).Value = product.price * product.qty;
+            }
+
+            // Adding Total Row
+            int totalRow = products.Count + 2;
+            worksheet.Cell(totalRow, 1).Value = "Тотал";
+            worksheet.Cell(totalRow, 7).Value = products.Sum(s => s.price * s.qty);
+
+            // Saving the Workbook
+            using (var stream = new MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                var content = Convert.ToBase64String(stream.ToArray());
+                jsRuntime.InvokeAsync<string>("saveAsFile", $"{username} zakazi.xlsx", content);
+            }
+        }
+    }
+}
+<style>
+    table {
+        width: 100%;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+
+    th, td {
+        font-size: 16px;
+        padding: 10px;
+    }
+
+    table, thead, tbody, th, td, tr {
+        border: 1px solid black;
+    }
+
+    .btn {
+        width: auto;
+        height: auto;
+        border-radius: 10px;
+        border: 1px solid black;
+        font-size: 14px;
+    }
+</style>
