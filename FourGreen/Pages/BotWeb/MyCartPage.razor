@@ -25,7 +25,7 @@
                     <div class="test-text">
                         <div class="brand-qty">
                             <p class="brand">@item.BrandName</p>
-                            <p class="qty">Сотувда: @products.FirstOrDefault(f => f.Id == item.Id).Quantity ta</p>
+                            <p class="qty">Сотувда: @products.FirstOrDefault(f => f.Id == item.Id).Quantity</p>
                         </div>
                         <div class="type-info">
                             <p class="type">@item.Type:</p>
@@ -193,7 +193,7 @@ else
 
         .cards .test-item {
             width: 100%;
-            height: 145px;
+            height: 160px;
             padding: 5px;
             background-color: #b1a9a9de;
             border-radius: 10px;
@@ -220,6 +220,9 @@ else
             .cards .test-item .test-text {
                 width: 70%;
                 height: auto;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
             }
 
                 .cards .test-item .test-text .brand-qty {
@@ -248,7 +251,6 @@ else
                     width: 100%;
                     height: 60px;
                     margin-bottom: 5px;
-                    
                     border-radius: 5px;
                     display: flex;
                     flex-direction: column;
@@ -262,7 +264,6 @@ else
 
                     .cards .test-item .test-text .type-info .info {
                         margin: 0;
-                        line-height: 8px;
                     }
 
                 .cards .test-item .test-text .price-btn {
@@ -270,11 +271,13 @@ else
                     height: 41px;
                     display: flex;
                     flex-direction: row;
-                    justify-content: space-between
+                    justify-content: space-between;
+                    align-items: center;
                 }
 
                     .cards .test-item .test-text .price-btn .price {
                         margin: 0;
+                        color: black;
                     }
 
                 .cards .test-item .test-text .plus-minus {

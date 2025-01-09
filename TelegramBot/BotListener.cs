@@ -118,8 +118,8 @@ namespace TelegramBot
         {
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                 new List<KeyboardButton>{
-                    new KeyboardButton(Messages.KYB_About) { WebApp = new WebAppInfo{ Url = "https://5426-84-54-74-103.ngrok-free.app/bot"} },
-                    new KeyboardButton(Messages.KYB_Order) { WebApp = new WebAppInfo{ Url =$"https://5426-84-54-74-103.ngrok-free.app/order/{id}"} }
+                    new KeyboardButton(Messages.KYB_About) { WebApp = new WebAppInfo{ Url = "https://8a93-92-63-204-88.ngrok-free.app/bot"} },
+                    new KeyboardButton(Messages.KYB_Order) { WebApp = new WebAppInfo{ Url =$"https://8a93-92-63-204-88.ngrok-free.app/order/{id}"} }
             });
             replyKeyboardMarkup.ResizeKeyboard = true;
             return replyKeyboardMarkup;

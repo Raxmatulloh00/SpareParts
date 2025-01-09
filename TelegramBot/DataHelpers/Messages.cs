@@ -18,6 +18,6 @@ namespace TelegramBot.DataHelpers
         public static string Info_start = "Assalomu alaykum hurmatli foydalanuvchi: Bizning 🚘<b>@Various_autoparts_bot</b> 🚘 ga\r\n\t\t\t\t\t\t 👋 Xush kelibsiz 👋";
         public static string Info_create_name = "Ismingizni kiriting:";
         public static string Info_create_phone = "Telefon raqamingizni yuboring:";
-        public static string Info_success = "Siz ro'yxatdan o'tgansiz Hurmatli foydalinuvchi ✅ \n\n\n Buyurtam qilishingiz mumkin";
+        public static string Info_success = "Siz ro'yxatdan o'tgansiz hurmatli foydalinuvchi ✅ \n\n\n Buyurtma qilishingiz mumkin";
     }
 }

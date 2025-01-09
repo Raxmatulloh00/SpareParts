@@ -15,12 +15,12 @@
         <div class="iconlogo">
             <i @onclick="(() => Cancle(UserId))" class="fa-solid fa-arrow-left"></i>
             <img class="log" src="./images/svg/Logo.svg" />
-            @*  *@
             <i @onclick="(() => CartPage(UserId))" class="fa-solid fa-cart-shopping cart"></i>
-            <Badge Style="position:absolute;left: 300px;top: 41px;" Size="default" Count="myCart.CartProducts.Count()">
+            <Badge Style="position:absolute;left: 290px;top: 41px; width:30px;background-color: #83baffc9;" Size="default" Count="myCart.CartProducts.Count()">
                 <a href="#" class="head-example" />
             </Badge>
         </div>
+        
         <div style="display:flex; flex-direction:column; flex:1; overflow:auto;">
             <div class="brand">
                 <img src="@chosenBrand.ImgUrl">
@@ -43,13 +43,16 @@
                         <div class="image">
                             <img src="@item.ImageUrl">
                         </div>
-                        <p>@item.Price $</p>
-                        <p class="description">@item.Name</p>
-                        <p class="nalicha">Сотувда шунча: @item.Quantity</p>
+                        <div class="textbox">
+                            <div class="prisenal">
+                                <p class="price">@item.Price $</p>
+                                <p class="nalicha">Сотувда: @item.Quantity</p>
+                            </div>
+                        <b class="description">@item.Name</b>
 
                         @if (myCart.CartProducts.FirstOrDefault(f => f.Id == item.Id) != null)
                         {
-                            <div style="display:flex; flex-direction:row; gap:10px; justify-content:space-between;">
+                            <div class="addqtmin" >
 
 
                                 <button disabled="@(loading || myCart.CartProducts.FirstOrDefault(f => f.Id == item.Id)!.Qty == 0)" class="minus" @onclick="e=>TaskHandleCart(item,-1)">
@@ -67,8 +70,9 @@
                         }
                         else
                         {
-                            <button class="addbtn" @onclick="e=>TaskHandleCart(item,1)">Саватга қошиш</button>
+                                <button class="addbtn" @onclick="e=>TaskHandleCart(item,1)">Саватга</button>
                         }
+                        </div>
 
                     </div>
                 }
@@ -321,7 +325,7 @@
     .categorys {
         width: 100%;
         height: auto;
-        padding: 10px;
+        padding: 5px;
         display: flex;
         flex-direction: row;
         gap: 15px;
@@ -366,6 +370,7 @@
             width: 160px;
             height: 100%;
             border-radius: 20px;
+            background-color: #ffffff;
         }
 
         .brand p {
@@ -379,8 +384,9 @@
     .spareparts {
         width: 100%;
         height: auto;
-        padding: 10px;
+        padding: 5px;
         display: flex;
+        margin-top:10px;
         -ms-flex-wrap: wrap;
         flex-wrap: wrap;
         justify-content: space-around;
@@ -388,11 +394,13 @@
 
         .spareparts .card {
             width: 160px;
-            margin-bottom: 10px;
-            height: 280px;
+            margin-bottom: 15px;
+            height: 310px;
             padding: 5px;
             background-color: #E8E8E8;
             border-radius: 10px;
+            border: 1px solid black;
+            box-shadow: 6px 5px 7px gray;
         }
 
             .spareparts .card .image {
@@ -400,8 +408,38 @@
                 height: 150px;
                 border-radius: 10px;
                 background-color: white;
+                border: 1px solid black;
             }
 
+            .spareparts .card .textbox {
+                display: flex;
+                flex-direction: column;
+                align-items: baseline;
+                width: 100%;
+                height: 100%;
+                justify-content: space-around;
+            }
+
+                .spareparts .card .textbox .prisenal {
+                    width: 100%;
+                    height: 20px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                    flex-direction: row;
+                }
+                .spareparts .card .textbox .price {
+                    color: black;
+                    font-size: medium;
+                    font-weight: bold;
+            }
+            .spareparts .card .addqtmin {
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
             .spareparts .card .minus {
                 width: 35px;
                 height: 35px;
@@ -434,11 +472,8 @@
     }
 
     .description {
-        margin-bottom: 0;
         color: black;
-        font-size: small;
         font-family: Calibri;
-        font-weight: bold;
     }
 
     p {
@@ -452,11 +487,12 @@
         color: #207532;
         font-weight: bold;
         font-family: Arial;
-        margin-bottom: 10px;
     }
 
     .addbtn {
-        height: 35px;
+        width: 100%;
+        height: 40px;
+        padding: 10px;
         border-radius: 25px;
         font-size: 14px;
         font-weight: bold;

@@ -26,7 +26,7 @@
                     {
                             @foreach (var items in item.sparePartBrandsImages)
                             {
-                                    <Image Src="@items.ImageURl" Style="width:159px; height:150px;" />
+                                    <Image Src="@items.ImageURl" Style="width:159px; height:150px; background-color:white" />
                             }
                     }
                     else
@@ -104,11 +104,11 @@
     }
 
     .pagebox {
-        margin: 30px;
+        margin: 10px;
         display: flex;
         -ms-flex-wrap: wrap;
         flex-wrap: wrap;
-        grid-gap: 30px;
+        grid-gap: 20px;
     }
 
     .textbtn {
